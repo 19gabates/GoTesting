@@ -1,6 +1,6 @@
-# Exercise #1: Quiz Game
+# Status: Part 1 Completed
 
-[exercise status: Part 1 Completed]
+# Exercise #1: Quiz Game
 
 ## Exercise details
 
