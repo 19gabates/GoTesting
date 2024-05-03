@@ -1,6 +1,6 @@
 # Exercise #1: Quiz Game
 
-[![exercise status: Part 1 Completed](https://img.shields.io/badge/exercise%20status-released-green.svg?style=for-the-badge)]
+[exercise status: Part 1 Completed]
 
 ## Exercise details
 
