@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 )
 
 func quizMaster(fileName string, timeLimit int) {
@@ -12,34 +13,70 @@ func quizMaster(fileName string, timeLimit int) {
 	var incorrectAnswer int
 	var totalQuestions int
 
-	fmt.Println("The time limit is", timeLimit)
+	fmt.Println("The time limit is", timeLimit, "seconds")
+	var input string
+	fmt.Print("Are you ready?(y or n): ")
+	fmt.Scanln(&input)
+	if input == "n" {
+		os.Exit(1)
+	} else {
+
+	}
+
 	quizFile, err := os.Open(fileName)
 	if err != nil {
-		fmt.Println("An error with opening the file ::", err)
+		fmt.Println("An error with opening the file:", err)
+		return
 	}
 	defer quizFile.Close()
 
 	reader := csv.NewReader(quizFile)
-	allData, _ := reader.ReadAll()
+	allData, err := reader.ReadAll()
+	if err != nil {
+		fmt.Println("Failed to parse the provided CSV file:", err)
+		return
+	}
 
-	for _, record := range allData {
-		question := record[0]
-		answer := record[1]
-		var input string
+	answers := make(chan bool)
 
-		fmt.Print("Question: ", question, ": ")
-		fmt.Scan(&input)
-		if input == answer {
-			fmt.Println("The answer is correct")
-			correctAnswer++
+	go func() {
+		for _, record := range allData {
+			question := record[0]
+			answer := record[1]
+
+			fmt.Print("Question: ", question, ": ")
+			var input string
+			fmt.Scanln(&input)
+			if input == answer {
+				answers <- true
+			} else {
+				answers <- false
+			}
+		}
+		close(answers)
+	}()
+
+	timer := time.NewTimer(time.Duration(timeLimit) * time.Second)
+
+	for {
+		select {
+		case <-timer.C:
+			fmt.Println("\nTime's up! Try Again!")
+			return
+		case answer, ok := <-answers:
+			if !ok {
+				goto result
+			}
 			totalQuestions++
-		} else {
-			fmt.Println("The answer is wrong")
-			incorrectAnswer++
-			totalQuestions++
+			if answer {
+				correctAnswer++
+			} else {
+				incorrectAnswer++
+			}
 		}
 	}
 
+result:
 	quizResult := float64(correctAnswer) / float64(totalQuestions) * 100
 	fmt.Println("You got", correctAnswer, "correct answers.")
 	fmt.Println("You got", incorrectAnswer, "incorrect answers.")
@@ -47,8 +84,9 @@ func quizMaster(fileName string, timeLimit int) {
 }
 
 func main() {
-	csv := flag.String("csv", "problems.csv", "A csv file in the format of 'question,answer' (default 'problems.csv')")
+	csvFile := flag.String("csv", "problems.csv", "A csv file in the format of 'question,answer' (default 'problems.csv')")
 	limit := flag.Int("limit", 30, "The time limit for the quiz in seconds (default 30)")
 	flag.Parse()
-	quizMaster(*csv, *limit)
+
+	quizMaster(*csvFile, *limit)
 }

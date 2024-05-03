@@ -1,4 +1,4 @@
-# Status: Part 1 Completed
+# Status: Part 2 Completed
 
 # Exercise #1: Quiz Game
 
